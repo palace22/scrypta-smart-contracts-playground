@@ -130,10 +130,6 @@
         app.address = SIDS[0];
         let identity = await app.scrypta.returnIdentity(app.address);
         app.wallet = identity;
-        let check_backup = localStorage.getItem('sid_backup')
-        if(check_backup !== null && check_backup !== undefined && check_backup === app.address){
-          app.backup = true
-        }
         app.isLogging = false;
       } else {
         app.isLogging = false;
