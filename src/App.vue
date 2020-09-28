@@ -16,6 +16,7 @@
         <template slot="end">
           <b-navbar-item tag="div">
             <div class="buttons">
+              <v-gravatar class="gravatar" :email="address" style="margin-right: 10px; height: 80px;max-height: 37px;float: right;margin-top: -8px;border-radius: 4px;"/>
               <a v-on:click="logout" class="logout button is-primary">
                 <strong>Logout</strong>
               </a>

@@ -10,35 +10,40 @@ exports.code = `/**
 /* Scrypta v0.0.1 */
 
 const time = new Date()
-let state = {}
+
 async function constructor() {
     
 }
 
-async function public: eachBlock(block){
+function public: eachBlock(block){
     // THIS FUNCTION WILL BE CALLED FOR EACH NEW BLOCK!
-    console.log(block)
+    return new Promise(async response => {
+        response(block)
+    })
 }
 
-async function public: ifMempool(mempool){
+function public: ifMempool(mempool){
     // THIS FUNCTION WILL BE CALLED IF MEMPOOL IS FULL!
-    console.log(mempool)
+    return new Promise(async response => {
+        response(mempool)
+    })
 }
 
-async function public: updatestatus(){
+function public: updatestatus(){
     // WORKING WITH DB IN STATELESS MODE
-    let read = await db.read({"address": request.address})
+    return new Promise(async response => {
+        let read = await db.read({"address": request.address})
 
-    if(read.length === 0){
-        await db.insert({ "address": request.address, score: 0 })
+        if(read.length === 0){
+            await db.insert({ "address": request.address, score: 0 })
+            read = await db.read({"address": request.address})
+        }
+    
+        let increment = read.score + 1
+        await db.update({"address": request.address }, { $set: { score: increment } })
         read = await db.read({"address": request.address})
-        console.log('CREATED', read)
-    }
-
-    let increment = read.score + 1
-    await db.update({"address": request.address }, { $set: { score: increment } })
-    read = await db.read({"address": request.address})
-    console.log('UPDATED', read)
+        response(read)
+    })
 }
 
 function private: inner(){
