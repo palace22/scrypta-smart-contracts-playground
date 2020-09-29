@@ -149,7 +149,8 @@
                 v-on:click="copyContract(contract)"
               >
                 {{ contract.name }}<br>
-                <b>Current version:</b> {{ contract.version }}
+                <b>Current version:</b> {{ contract.version }}<br>
+                <b>Address:</b> {{ contract.address }}
               </span>
               <div
                 style="float: right; cursor: pointer"
@@ -197,7 +198,7 @@
               <span style="font-size: 12px">v.{{ lastRemote.version }}</span>
             </h1>
             <b style="font-size: 12px">Deployed at</b>
-            <span style="font-size: 10px">{{ lastRemote.address }}</span
+             <span style="font-size: 10px">{{ lastRemote.address }}</span
             ><br />
             <i style="font-size: 13px">{{ lastRemote.description }}</i>
             <hr />
