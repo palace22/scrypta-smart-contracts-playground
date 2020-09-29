@@ -10,6 +10,7 @@
         class="tabs-custom"
         type="is-toggle"
         :animated="false"
+        v-model="activeTab"
         vertical
         expanded
       >
@@ -29,6 +30,7 @@
             >
               <span
                 style="cursor: pointer"
+                v-bind:class="{ active: lastContract === contract }"
                 v-on:click="selectContract(contract)"
                 >{{ contract }}</span
               >
@@ -39,14 +41,17 @@
                 <b-icon icon="delete" size="is-small"> </b-icon>
               </div>
             </div>
-            <hr style="margin: 5px 0; padding: 0" />
+            <hr style="margin: 10px 0; padding: 0" />
           </div>
-          <h1>
-            {{ contract.name }}
-            <span style="font-size: 12px">v.{{ contract.version }}</span>
-          </h1>
-          <i>{{ contract.description }}</i>
-          <hr />
+          <b
+            style="
+              width: 100%;
+              text-align: center;
+              display: block;
+              margin-bottom: 4px;
+            "
+            >TEST CONTRACT FUNCTIONS</b
+          >
           <div v-if="contract.functions" style="text-align: center">
             <div v-for="fn in contract.functions" v-bind:key="fn">
               <b-button
@@ -76,6 +81,7 @@
               v-model="block"
             ></b-input>
             <b-tooltip
+              v-if="selected === 'eachBlock' || selected === 'ifMempool'"
               label="Inject last block"
               style="
                 cursor: pointer;
@@ -101,23 +107,149 @@
           <b-button size="is-medium" v-on:click="run" expanded type="is-primary"
             >RUN</b-button
           >
-          <b-button
-            size="is-medium"
-            type="is-success"
-            style="border-radius: 0px; position: absolute; bottom: 0; left: 0"
-            v-on:click="deploy"
-            v-if="!isDeploying"
-            expanded
-            >DEPLOY</b-button
+          <div
+            style="
+              padding-left: 45px;
+              position: relative;
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              width: 100%;
+            "
           >
+            <b-button
+              size="is-medium"
+              type="is-success"
+              style="border-radius: 0px"
+              v-on:click="deploy"
+              v-if="!isDeploying"
+              expanded
+              >DEPLOY</b-button
+            >
+          </div>
         </b-tab-item>
 
         <b-tab-item label="" icon="view-dashboard">
           <h1>Your contracts</h1>
+          <i
+            >This section shows your deployed contracts, click on it to start
+            edit in local editor or click play button to run it in mainnet.</i
+          >
+          <hr />
+          <div v-if="remote.length === 0">No deployed contracts..</div>
+          <div v-if="remote.length > 0">
+            <div
+              v-for="contract in remote"
+              style="font-size: 13px; width: 100%; display: block"
+              v-bind:key="contract.name"
+            >
+              <span
+                style="cursor: pointer"
+                v-bind:class="{ active: remoteContractName === contract.name }"
+                v-on:click="copyContract(contract)"
+              >
+                {{ contract.name }}<br>
+                <b>Current version:</b> {{ contract.version }}
+              </span>
+              <div
+                style="float: right; cursor: pointer"
+                v-on:click="playContract(contract)"
+              >
+                <b-icon icon="play" size="is-small"> </b-icon>
+              </div>
+              <hr style="margin:5px 0; padding:0">
+            </div>
+          </div>
         </b-tab-item>
 
         <b-tab-item label="" icon="compass">
           <h1>Discovery contracts</h1>
+          <div v-if="!lastRemote">
+            <i
+              >In this section you'll be able to send and run contracts
+              functions of deployed contracts. Click in the name to copy it in
+              local enviorment or click play button to start
+              interactions.</i
+            >
+            <hr />
+          </div>
+          <div v-if="allcontracts.length > 0">
+            <div
+              v-for="contract in allcontracts"
+              style="font-size: 13px; width: 100%; display: block"
+              v-bind:key="contract.name"
+            >
+              <span style="cursor: pointer" v-on:click="copyContract(contract)">
+                {{ contract.name }}
+              </span>
+              <div
+                style="float: right; cursor: pointer"
+                v-on:click="playContract(contract)"
+              >
+                <b-icon icon="play" size="is-small"> </b-icon>
+              </div>
+            </div>
+            <hr style="margin: 5px 0; padding: 0" />
+          </div>
+          <div v-if="lastRemote !== ''">
+            <h1 style="font-size: 14px !important">
+              {{ lastRemote.name }}
+              <span style="font-size: 12px">v.{{ lastRemote.version }}</span>
+            </h1>
+            <b style="font-size: 12px">Deployed at</b>
+            <span style="font-size: 10px">{{ lastRemote.address }}</span
+            ><br />
+            <i style="font-size: 13px">{{ lastRemote.description }}</i>
+            <hr />
+            <b
+              style="
+                width: 100%;
+                text-align: center;
+                display: block;
+                margin-bottom: 4px;
+              "
+              >RUN CONTRACT FUNCTIONS</b
+            >
+            <div v-if="lastRemote.functions" style="text-align: center">
+              <div v-for="fn in lastRemote.functions" v-bind:key="fn">
+                <b-button
+                  v-if="
+                    selected !== fn && fn !== 'eachBlock' && fn !== 'ifMempool'
+                  "
+                  size="is-small"
+                  expanded
+                  style="text-align: left"
+                  v-on:click="selectfunction(fn)"
+                >
+                  {{ fn }}
+                </b-button>
+                <b-button
+                  v-if="
+                    selected === fn && fn !== 'eachBlock' && fn !== 'ifMempool'
+                  "
+                  size="is-small"
+                  expanded
+                  type="is-danger"
+                  style="text-align: left"
+                >
+                  {{ fn }}
+                </b-button>
+              </div>
+            </div>
+            <b-input
+              placeholder="Insert parameters"
+              v-model="params"
+              type="textarea"
+            ></b-input>
+            <br />
+            <b-button
+              size="is-medium"
+              v-on:click="runremote"
+              expanded
+              type="is-primary"
+              >RUN</b-button
+            >
+          </div>
         </b-tab-item>
       </b-tabs>
     </div>
@@ -128,7 +260,12 @@
       :highlight="highlighter"
       line-numbers
     ></prism-editor>
-    <div v-if="showdebug" class="debugger" id="debugger">
+    <div
+      v-if="showdebug"
+      v-bind:class="{ fulldebug: fullDebug }"
+      class="debugger"
+      id="debugger"
+    >
       <div class="debug" v-html="debug"></div>
     </div>
   </div>
@@ -146,7 +283,7 @@ const ScryptaCore = require("@scrypta/core");
 const ScryptaCompiler = require("@scrypta/compiler");
 var CoinKey = require("coinkey");
 const axios = require("axios");
-const LZUTF8 = require('lzutf8');
+const LZUTF8 = require("lzutf8");
 
 export default {
   components: {
@@ -158,14 +295,20 @@ export default {
     scrypta: new ScryptaCore(true),
     v001: ScryptaCompiler.v001,
     coinkey: CoinKey,
+    remote: [],
     contract: {},
     showSave: false,
+    fullDebug: false,
     selected: "eachBlock",
     lastContract: "HELLOWORLD",
     isLogging: true,
+    allcontracts: [],
+    lastRemote: "",
     params: "",
+    activeTab: 0,
     block: "",
     showdebug: true,
+    remoteContractName: "",
     isDeploying: false,
     local: [],
     session: {},
@@ -176,6 +319,7 @@ export default {
     app.wallet = await app.scrypta.importBrowserSID();
     app.wallet = await app.scrypta.returnDefaultIdentity();
     let address = await app.scrypta.createAddress("SESSION");
+    app.scrypta.staticnodes = true;
     app.session = address;
     if (localStorage.getItem("contracts") !== null) {
       let stored = JSON.parse(localStorage.getItem("contracts"));
@@ -191,15 +335,155 @@ export default {
       app.address = SIDS[0];
       let identity = await app.scrypta.returnIdentity(app.address);
       app.wallet = identity;
+      let remote = await app.scrypta.post("/read", {
+        protocol: "ida://",
+      });
+      let unique = [];
+      let uniqueowner = [];
+      for (let k in remote.data) {
+        try {
+          if (remote.data[k].data.message !== undefined) {
+            let contract = JSON.parse(remote.data[k].data.message);
+            contract.address === remote.data[k].address;
+            contract.developer === remote.data[k].data.address;
+            if (
+              remote.data[k].data.address === app.address &&
+              uniqueowner.indexOf(remote.data[k].address) === -1
+            ) {
+              uniqueowner.push(remote.data[k].address);
+              app.remote.push(contract);
+            }
+            if (unique.indexOf(remote.data[k].address) === -1) {
+              unique.push(remote.data[k].address);
+              app.allcontracts.push(contract);
+            }
+          }
+        } catch (e) {
+          app.log(remote.data[k].data);
+        }
+      }
       app.isLogging = false;
     } else {
       app.isLogging = false;
     }
     app.contract = await app.v001.compiler(app.code);
     delete app.contract.code;
-    this.showSave = false;
+    await app.save();
   },
   methods: {
+    async copyContract(contract) {
+      const app = this;
+      app.lastContract = contract.name;
+      app.log(
+        'CONTRACT "' + app.lastContract + '" COPIED IN PLAYGROUND ENVIORMENT'
+      );
+      app.code = LZUTF8.decompress(contract.code, { inputEncoding: "Base64" });
+      app.contract = await app.v001.compiler(app.code);
+      delete app.contract.code;
+      app.activeTab = 0;
+    },
+    async playContract(contract) {
+      const app = this;
+      app.remoteContractName = contract.name;
+      app.log(
+        'CONTRACT "' + app.remoteContractName + '" SELECTED FOR RUN IN MAINNET'
+      );
+      let code = LZUTF8.decompress(contract.code, { inputEncoding: "Base64" });
+      app.lastRemote = await app.v001.compiler(code);
+      app.lastRemote.address = contract.address;
+      app.activeTab = 2;
+      app.fullDebug = true;
+    },
+    runremote() {
+      const app = this;
+      app.$buefy.dialog.prompt({
+        message: `Inserisci la password del wallet`,
+        inputAttrs: {
+          type: "password",
+        },
+        trapFocus: true,
+        onConfirm: async (password) => {
+          let key = await app.scrypta.readKey(password, app.wallet.wallet);
+          if (key !== false) {
+            let searchsigned = await app.scrypta.createContractRequest(
+              app.wallet.wallet,
+              password,
+              {
+                contract: "LgSAtP3gPURByanZSM32kfEu9C1uyQ6Kfg",
+                function: "index",
+                params: {
+                  contract: app.lastRemote.address,
+                  version: "latest",
+                },
+              }
+            );
+            app.log(
+              "SEARCH WHERE CONTRACT " + app.lastRemote.address + " IS STORED"
+            );
+            try {
+              let maintainers = await app.scrypta.post(
+                "/contracts/run",
+                searchsigned
+              );
+              if (maintainers !== undefined && maintainers !== false) {
+                if (maintainers.length > 0) {
+                  let params;
+                  try {
+                    params = JSON.parse(app.params);
+                  } catch (e) {
+                    params = app.params;
+                  }
+                  let requestsigned = await app.scrypta.createContractRequest(
+                    app.wallet.wallet,
+                    password,
+                    {
+                      contract: app.lastRemote.address,
+                      function: app.selected,
+                      params: params,
+                      version: "latest",
+                    }
+                  );
+                  let answered = false;
+                  let aix = 0;
+                  app.log("FOUND " + maintainers.length + " MAINTAINERS");
+                  while (answered === false) {
+                    let idanode = maintainers[0];
+                    app.log("ASKING " + idanode.url + " TO RESPONSE");
+                    let response = await app.scrypta.post(
+                      "/contracts/run",
+                      requestsigned,
+                      idanode.url
+                    );
+                    if (response !== undefined) {
+                      try {
+                        app.log(JSON.stringify(response));
+                      } catch (e) {
+                        app.log(response);
+                      }
+                      answered = true;
+                    }
+                    aix++;
+                    if (aix > 9) {
+                      answered = true;
+                      app.log("CAN'T GET RESPONSE FROM MAINTAINERS");
+                    }
+                  }
+                } else {
+                  app.log("NO ONE MAINTAIN CONTRACT " + app.lastRemote.address);
+                }
+              } else {
+                app.log("INDEXER CONTRACT NOT WORKING");
+              }
+            } catch (e) {
+              app.log("ERROR WHILE SEARCHING INDEXED CONTRACT");
+              app.log(e);
+            }
+          } else {
+            app.log("WRONG PASSWORD!");
+          }
+        },
+      });
+    },
     deploy() {
       const app = this;
       if (app.isDeploying === false) {
@@ -226,10 +510,12 @@ export default {
                 scripthash: 0x0d,
               });
               app.log("CONTRACT ADDRESS IS: " + contract.publicAddress);
-              app.contract.v = 1
-              app.contract.address = contract.publicAddress
-              let manifest = app.contract
-              manifest.code = LZUTF8.compress(app.code, { outputEncoding: 'Base64' })
+              app.contract.v = 1;
+              app.contract.address = contract.publicAddress;
+              let manifest = app.contract;
+              manifest.code = LZUTF8.compress(app.code, {
+                outputEncoding: "Base64",
+              });
               let sid = await app.scrypta.buildWallet(
                 "TEMPORARY",
                 contract.publicAddress,
@@ -276,7 +562,10 @@ export default {
                         );
                         let funded = false;
                         if (contractBalance.balance < 0.002) {
-                          funded = await app.fundAddress(manifest.address, key.prv);
+                          funded = await app.fundAddress(
+                            manifest.address,
+                            key.prv
+                          );
                         } else {
                           funded = true;
                         }
@@ -489,8 +778,14 @@ export default {
           let block = await app.scrypta.get("/analyze/" + app.block);
           app.params = block.data;
         }
+        let params;
+        try {
+          params = JSON.parse(app.params);
+        } catch (e) {
+          params = app.params;
+        }
         let requesthex = Buffer.from(
-          JSON.stringify({ function: app.selected, params: app.params })
+          JSON.stringify({ function: app.selected, params: params })
         ).toString("hex");
         let request = await app.scrypta.signMessage(
           app.session.prv,
@@ -532,6 +827,16 @@ export default {
         app.save();
       }
     },
+    activeTab: function (selected) {
+      const app = this;
+      app.params = "";
+      app.selected = "";
+      if (selected === 2) {
+        this.fullDebug = true;
+      } else {
+        this.fullDebug = false;
+      }
+    },
   },
 };
 </script>
@@ -552,11 +857,14 @@ html {
   text-align: left;
   overflow-y: scroll;
 }
+.fulldebug {
+  height: calc(100vh - 55px) !important;
+}
 .debugger .debug {
   font-size: 12px;
   padding: 10px 10px 30px 10px;
   font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
-  word-break: break-all;
+  word-break: break-word;
 }
 .contract-editor {
   width: 75%;
@@ -590,7 +898,20 @@ html {
 .tabs-custom {
   height: calc(100vh - 55px);
 }
-
+.tab-content {
+  padding-left: 60px !important;
+  word-break: break-word;
+}
+.active {
+  font-weight: bold !important;
+}
+.tabs {
+  height: calc(100vh - 55px);
+  position: fixed;
+  top: 55px;
+  z-index: 19;
+  left: 0;
+}
 /* optional class for removing the outline */
 .prism-editor__textarea:focus {
   outline: none;
