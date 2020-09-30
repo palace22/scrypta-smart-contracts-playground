@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@scrypta/compiler": "^1.0.1",
-    "@scrypta/core": "^2.4.9",
+    "@scrypta/core": "^2.5.1",
     "axios": "^0.20.0",
     "buefy": "^0.9.3",
     "coinkey": "^3.0.0",
@@ -31,7 +31,7 @@
     "@vue/cli-service": "~4.5.6",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.10.0",
-    "eslint-plugin-vue": "^6.2.2",
+    "eslint-plugin-vue": "^7.0.0",
     "node-sass": "^4.14.1",
     "sass-loader": "^10.0.2",
     "vue-template-compiler": "^2.6.12"

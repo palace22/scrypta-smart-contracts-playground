@@ -148,9 +148,9 @@
                 v-bind:class="{ active: remoteContractName === contract.name }"
                 v-on:click="copyContract(contract)"
               >
-                {{ contract.name }}<br>
-                <b>Current version:</b> {{ contract.version }}<br>
-                <b>Address:</b> {{ contract.address }}
+                {{ contract.name }}<br />
+                <b>Current version:</b> <span style="font-size:9px">{{ contract.version }}</span><br />
+                <b>Address:</b> <span style="font-size:9px">{{ contract.address }}</span>
               </span>
               <div
                 style="float: right; cursor: pointer"
@@ -158,7 +158,7 @@
               >
                 <b-icon icon="play" size="is-small"> </b-icon>
               </div>
-              <hr style="margin:5px 0; padding:0">
+              <hr style="margin: 5px 0; padding: 0" />
             </div>
           </div>
         </b-tab-item>
@@ -169,8 +169,7 @@
             <i
               >In this section you'll be able to send and run contracts
               functions of deployed contracts. Click in the name to copy it in
-              local enviorment or click play button to start
-              interactions.</i
+              local enviorment or click play button to start interactions.</i
             >
             <hr />
           </div>
@@ -180,7 +179,11 @@
               style="font-size: 13px; width: 100%; display: block"
               v-bind:key="contract.name"
             >
-              <span style="cursor: pointer" v-on:click="copyContract(contract)">
+              <span
+                style="cursor: pointer"
+                v-bind:class="{ active: remoteContractName === contract.name }"
+                v-on:click="copyContract(contract)"
+              >
                 {{ contract.name }}
               </span>
               <div
@@ -198,7 +201,7 @@
               <span style="font-size: 12px">v.{{ lastRemote.version }}</span>
             </h1>
             <b style="font-size: 12px">Deployed at</b>
-             <span style="font-size: 10px">{{ lastRemote.address }}</span
+            &nbsp;<span style="font-size: 10px">{{ lastRemote.address }}</span
             ><br />
             <i style="font-size: 13px">{{ lastRemote.description }}</i>
             <hr />
